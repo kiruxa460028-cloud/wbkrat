@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Округление до кратности + анализ вариантов (исправлено)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+        body {
+            background: #f3f5f9;
+            display: flex;
+            justify-content: center;
+            padding: 30px 20px;
+            margin: 0;
+        }
+        .card {
+            max-width: 1600px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            padding: 30px 25px;
+        }
+        h1 {
+            font-size: 1.9rem;
+            font-weight: 500;
+            margin: 0 0 8px 0;
+            color: #1e293b;
+        }
+        .sub {
+            color: #475569;
+            margin-bottom: 30px;
+            border-left: 5px solid #3b82f6;
+            padding-left: 18px;
+            background: #f8fafc;
+            border-radius: 0 14px 14px 0;
+            line-height: 1.5;
+        }
+        .upload-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-bottom: 35px;
+        }
+        .upload-box {
+            flex: 1 1 280px;
+            background: #f9f9fc;
+            border-radius: 24px;
+            padding: 20px;
+            border: 1px solid #e9eef2;
+        }
+        .upload-box label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 15px;
+            color: #0f172a;
+            font-size: 1.2rem;
+        }
+        .upload-box small {
+            display: block;
+            color: #64748b;
+            margin: 12px 0 6px;
+            font-size: 0.85rem;
+        }
+        input[type=file] {
+            width: 100%;
+            padding: 12px 0;
+            font-size: 0.95rem;
+            border: 1px dashed #94a3b8;
+            border-radius: 16px;
+            background: white;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0 25px;
+        }
+        button {
+            background: #1e293b;
+            border: none;
+            color: white;
+            font-weight: 500;
+            font-size: 1.1rem;
+            padding: 14px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #2d3a4f;
+        }
+        button:hover:not(:disabled) {
+            background: #2d3a4f;
+            transform: scale(1.01);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .stats {
+            color: #1e293b;
+            background: #eef2ff;
+            border-radius: 40px;
+            padding: 8px 22px;
+            font-size: 1rem;
+        }
+        .export-btn {
+            background: #0b4d0b;
+            border-color: #0f5c0f;
+            margin-left: auto;
+        }
+        .table-container {
+            overflow-x: auto;
+            border-radius: 24px;
+            margin-top: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            background: white;
+        }
+        th {
+            background: #f1f4f9;
+            color: #1e293b;
+            font-weight: 600;
+            padding: 16px 8px;
+            text-align: center;
+            border-bottom: 2px solid #cbd5e1;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .highlight-green {
+            background-color: #e6f7e6;
+            font-weight: 600;
+            color: #0b4d0b;
+        }
+        select {
+            padding: 6px 10px;
+            border-radius: 20px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            font-size: 0.9rem;
+            max-width: 180px;
+        }
+        .footer-note {
+            margin-top: 30px;
+            color: #55657b;
+            font-size: 0.9rem;
+            border-top: 1px dashed #ced9e8;
+            padding-top: 22px;
+        }
+        .badge {
+            font-size: 0.75rem;
+            color: #4b5563;
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+        .options-list {
+            font-size: 0.85rem;
+            text-align: left;
+            padding-left: 15px;
+            line-height: 1.5;
+            color: #2c3e50;
+        }
+        .option-item {
+            display: inline-block;
+            background: #eef2ff;
+            border-radius: 16px;
+            padding: 2px 10px;
+            margin: 2px;
+            white-space: nowrap;
+        }
+        .no-data {
+            color: #94a3b8;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>📦 Округление до кратности · с анализом вариантов (исправлено)</h1>
+    <div class="sub">
+        ✅ Загрузите таблицу кратности и файл с остатками.<br>
+        🔄 Для каждой позиции можно выбрать тип кратности (по умолчанию — китайские коробки).<br>
+        💡 Столбец <strong>«Можно округлить до»</strong> показывает только те типы, для которых <strong>есть кратность в таблице</strong> и срабатывает правило 30%.
+    </div>
+
+    <div class="upload-grid">
+        <div class="upload-box">
+            <label>📋 1. Таблица кратности (главная)</label>
+            <small>Колонки: C (артикул), G (Китай), I (40×30×30), J (60×40×40), K (28×23×22), L (паллета)</small>
+            <input type="file" id="multiplicityFile" accept=".csv, .xlsx, .xls, .ods">
+            <div style="margin-top: 10px;" id="multiplicityStatus">⏳ Файл не выбран</div>
+        </div>
+        <div class="upload-box">
+            <label>📊 2. Таблица загрузки (остатки)</label>
+            <small>Колонки: артикул / кол-во (две колонки)</small>
+            <input type="file" id="orderFile" accept=".csv, .xlsx, .xls, .ods">
+            <div style="margin-top: 10px;" id="orderStatus">⏳ Файл не выбран</div>
+        </div>
+    </div>
+
+    <div class="action-row">
+        <button id="loadDataBtn">📥 ЗАГРУЗИТЬ И ПОКАЗАТЬ ТАБЛИЦУ</button>
+        <button id="recalcBtn">🔄 ПЕРЕСЧИТАТЬ ВЫБРАННЫЕ</button>
+        <span class="stats" id="summaryInfo">—</span>
+        <button id="exportBtn" class="export-btn" disabled>📥 Скачать результат (XLSX)</button>
+    </div>
+
+    <!-- таблица результата -->
+    <div class="table-container" id="tableContainer">
+        <table id="resultTable">
+            <thead>
+            <tr>
+                <th>Артикул</th>
+                <th>Исходно</th>
+                <th>Тип кратности</th>
+                <th>Значение</th>
+                <th>Округлено</th>
+                <th>Δ %</th>
+                <th>Можно округлить до</th>
+                <th>Комментарий</th>
+            </tr>
+            </thead>
+            <tbody id="resultBody">
+            <tr><td colspan="8" style="text-align:center; padding:40px;">⬆ Загрузите файлы и нажмите "Загрузить и показать таблицу"</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer-note">
+        ⚖️ Правило 30%: если отклонение от кратного < 30% — округляем до кратного, иначе оставляем оригинал.<br>
+        📌 Столбец «Можно округлить до» показывает только те типы, для которых <strong>есть значение кратности в таблице</strong> И сработало правило 30%.<br>
+        📌 Если выбранный тип отсутствует — используется китайский как запасной (если он есть).
+    </div>
+</div>
+
+<!-- Подключаем SheetJS -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script>
+(function() {
+    // Данные
+    let multiplicityData = new Map(); // артикул -> объект со всеми кратностями
+    let orderRows = [];               // исходные строки [{article, originalQty}]
+    let currentRows = [];             // строки для отображения с выбранными типами
+    let lastResult = [];              // для экспорта
+
+    // Элементы
+    const multInput = document.getElementById('multiplicityFile');
+    const orderInput = document.getElementById('orderFile');
+    const multStatus = document.getElementById('multiplicityStatus');
+    const orderStatus = document.getElementById('orderStatus');
+    const loadDataBtn = document.getElementById('loadDataBtn');
+    const recalcBtn = document.getElementById('recalcBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const resultBody = document.getElementById('resultBody');
+    const summaryInfo = document.getElementById('summaryInfo');
+
+    // Типы кратности
+    const MULT_TYPES = {
+        china: { name: '🇨🇳 Китай (G)', col: 6, fallback: null, short: 'Китай' },
+        box1: { name: '📦 40×30×30 (I)', col: 8, fallback: 'china', short: '40×30×30' },
+        box2: { name: '📦 60×40×40 (J)', col: 9, fallback: 'china', short: '60×40×40' },
+        box3: { name: '📦 28×23×22 (K)', col: 10, fallback: 'china', short: '28×23×22' },
+        pallet: { name: '📏 Паллета (L)', col: 11, fallback: 'china', short: 'Паллета' }
+    };
+
+    // Парсинг числа
+    function parseNumber(val) {
+        if (val === undefined || val === null) return null;
+        if (typeof val === 'number') return val > 0 ? val : null;
+        let cleaned = String(val).replace(/,/g, '.').replace(/[^\d.-]/g, '');
+        if (cleaned === '') return null;
+        let num = Number(cleaned);
+        return (!isNaN(num) && num > 0) ? num : null;
+    }
+
+    // Чтение файла кратности
+    multInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) {
+            multStatus.innerText = '⏳ Файл не выбран';
+            multiplicityData.clear();
+            return;
+        }
+        multStatus.innerText = `⏳ Чтение ${file.name} ...`;
+        const reader = new FileReader();
+        reader.onload = (loadEvent) => {
+            try {
+                const data = new Uint8Array(loadEvent.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+                const map = new Map();
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row || row.length < 12) continue;
+                    
+                    let articleRaw = row[2];
+                    if (!articleRaw || String(articleRaw).trim() === '') continue;
+                    let articleStr = String(articleRaw).trim();
+
+                    map.set(articleStr, {
+                        china: parseNumber(row[6]),
+                        box1: parseNumber(row[8]),
+                        box2: parseNumber(row[9]),
+                        box3: parseNumber(row[10]),
+                        pallet: parseNumber(row[11])
+                    });
+                }
+
+                if (map.size === 0) throw new Error('Нет данных (проверьте колонки C и G-L)');
+                multiplicityData = map;
+                multStatus.innerText = `✅ Загружено: ${map.size} артикулов`;
+            } catch (err) {
+                multStatus.innerText = `❌ Ошибка: ${err.message}`;
+                multiplicityData.clear();
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    // Чтение файла заказа
+    orderInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) {
+            orderStatus.innerText = '⏳ Файл не выбран';
+            orderRows = [];
+            return;
+        }
+        orderStatus.innerText = `⏳ Чтение ${file.name} ...`;
+        const reader = new FileReader();
+        reader.onload = (loadEvent) => {
+            try {
+                const data = new Uint8Array(loadEvent.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+                const orders = [];
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row || row.length < 2) continue;
+                    let art = row[0];
+                    let qtyRaw = row[1];
+                    if (!art || String(art).trim() === '') continue;
+
+                    let articleStr = String(art).trim();
+                    let qtyNum = NaN;
+                    if (qtyRaw !== undefined && qtyRaw !== null) {
+                        if (typeof qtyRaw === 'number') qtyNum = qtyRaw;
+                        else {
+                            let cleaned = String(qtyRaw).replace(/,/g, '.').replace(/[^\d.-]/g, '');
+                            if (cleaned !== '') qtyNum = Number(cleaned);
+                        }
+                    }
+                    if (isNaN(qtyNum)) qtyNum = 0;
+
+                    orders.push({ article: articleStr, originalQty: qtyNum });
+                }
+                if (orders.length === 0) throw new Error('Нет строк с артикулами');
+                orderRows = orders;
+                orderStatus.innerText = `✅ Загружено: ${orders.length} позиций`;
+            } catch (err) {
+                orderStatus.innerText = `❌ Ошибка: ${err.message}`;
+                orderRows = [];
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    // Получить кратность по типу (только если она есть, без запасного)
+    function getExactMultValue(articleData, typeKey) {
+        if (!articleData) return null;
+        return articleData[typeKey] || null;
+    }
+
+    // Получить кратность с запасным вариантом (для выбранного типа)
+    function getMultWithFallback(articleData, typeKey) {
+        if (!articleData) return null;
+        let direct = articleData[typeKey];
+        if (direct !== null && direct !== undefined) return direct;
+        
+        // Пробуем запасной (китайский) только если это не сам китайский
+        if (typeKey !== 'china' && articleData.china) {
+            return articleData.china;
+        }
+        return null;
+    }
+
+    // Правило 30% - возвращает округлённое значение и флаг, изменилось ли
+    function roundByRule30(original, mult) {
+        if (mult <= 0 || original <= 0) return { value: original, changed: false };
+        
+        let higher = Math.ceil(original / mult) * mult;
+        let lower = Math.floor(original / mult) * mult;
+        if (lower < 0) lower = 0;
+        
+        if (original === higher) return { value: original, changed: false };
+        
+        let diffHigher = ((higher - original) / original) * 100;
+        let diffLower = ((original - lower) / original) * 100;
+        
+        let isHigherCloser = (higher - original) <= (original - lower);
+        let candidate = isHigherCloser ? higher : lower;
+        let candidateDiff = isHigherCloser ? diffHigher : diffLower;
+        
+        if (candidateDiff < 30) {
+            return { value: candidate, changed: true };
+        } else {
+            return { value: original, changed: false };
+        }
+    }
+
+    // Анализ всех возможных типов для данного количества
+    function analyzePossibleTypes(original, articleData) {
+        if (!articleData || original <= 0) return [];
+        
+        let possible = [];
+        
+        for (let [typeKey, typeInfo] of Object.entries(MULT_TYPES)) {
+            // Берем ТОЛЬКО точную кратность, без запасных вариантов
+            let mult = getExactMultValue(articleData, typeKey);
+            if (!mult) continue; // если кратности нет — пропускаем
+            
+            let result = roundByRule30(original, mult);
+            if (result.changed) {
+                possible.push(typeInfo.short);
+            }
+        }
+        
+        return possible;
+    }
+
+    // Загрузка данных и создание строк с выбором
+    loadDataBtn.addEventListener('click', function() {
+        if (orderRows.length === 0) {
+            alert('Сначала загрузите файл с остатками');
+            return;
+        }
+        if (multiplicityData.size === 0) {
+            alert('Загрузите таблицу кратности');
+            return;
+        }
+
+        // Создаём строки для отображения
+        currentRows = orderRows.map(order => {
+            let articleData = multiplicityData.get(order.article);
+            return {
+                article: order.article,
+                original: order.originalQty,
+                selectedType: 'china', // по умолчанию китайские
+                articleData: articleData || null
+            };
+        });
+
+        renderTable();
+        exportBtn.disabled = false;
+    });
+
+    // Пересчёт выбранных строк
+    recalcBtn.addEventListener('click', function() {
+        // Собираем выбранные типы из select
+        const selects = document.querySelectorAll('.type-select');
+        selects.forEach(select => {
+            let article = select.dataset.article;
+            let row = currentRows.find(r => r.article === article);
+            if (row) {
+                row.selectedType = select.value;
+            }
+        });
+        
+        renderTable();
+    });
+
+    // Отрисовка таблицы
+    function renderTable() {
+        let html = '';
+        let totalOriginal = 0;
+        let totalRounded = 0;
+        let changedCount = 0;
+        lastResult = [];
+
+        for (let row of currentRows) {
+            let article = row.article;
+            let original = row.original;
+            let selectedType = row.selectedType;
+            let articleData = row.articleData;
+            
+            // Получаем значение кратности С ЗАПАСНЫМ ВАРИАНТОМ для выбранного типа
+            let multValue = 1;
+            let multSource = 'нет в таблице';
+            let typeDisplay = '—';
+            let hasExactMult = false;
+            
+            if (articleData) {
+                let rawMult = getMultWithFallback(articleData, selectedType);
+                if (rawMult) {
+                    multValue = rawMult;
+                    multSource = selectedType;
+                    typeDisplay = MULT_TYPES[selectedType]?.name || selectedType;
+                    // Проверяем, есть ли точная кратность
+                    hasExactMult = getExactMultValue(articleData, selectedType) !== null;
+                } else {
+                    // Если даже запасной не сработал
+                    multValue = 1;
+                    multSource = 'нет кратности';
+                    typeDisplay = 'нет данных';
+                }
+            } else {
+                multValue = 1;
+                multSource = 'артикул не найден';
+                typeDisplay = 'не в таблице';
+            }
+
+            // Округление
+            let rounded = original;
+            let comment = '';
+            let diffPercent = 0;
+            let changed = false;
+            let roundingMethod = ''; // Для экспорта: какой метод использовался
+            let taraCount = '';      // Количество тары (для экспорта)
+            
+            if (original > 0 && multValue > 0 && articleData) {
+                let result = roundByRule30(original, multValue);
+                rounded = result.value;
+                changed = result.changed;
+                
+                if (changed) {
+                    let diff = rounded - original;
+                    diffPercent = (Math.abs(diff) / original) * 100;
+                    comment = diff > 0 ? `🔺 +${diff}` : `🔻 ${diff}`;
+                    if (!hasExactMult) comment += ' (запасной G)';
+                    changedCount++;
+                    
+                    // Определяем метод округления для экспорта
+                    if (hasExactMult) {
+                        roundingMethod = MULT_TYPES[selectedType]?.short || selectedType;
+                    } else {
+                        roundingMethod = 'Китай (запасной)';
+                    }
+                    
+                    // Рассчитываем количество тары (округляем до целого числа)
+                    let rawTara = rounded / multValue;
+                    taraCount = Math.round(rawTara * 100) / 100; // с двумя знаками, но обычно целое
+                    // Если число целое, показываем без десятичных
+                    if (Number.isInteger(rawTara)) {
+                        taraCount = rawTara;
+                    }
+                } else {
+                    if (original % multValue === 0) comment = '✅ кратно';
+                    else comment = '↩️ ≥30%';
+                    if (!hasExactMult) comment += ' (запасной G)';
+                    // roundingMethod остаётся пустой, так как округления не было
+                }
+            } else if (original === 0) {
+                comment = '0';
+            } else {
+                comment = '⚪ нет данных';
+            }
+
+            // Анализ возможных типов (только точные кратности)
+            let possibleTypes = analyzePossibleTypes(original, articleData);
+            let possibleHtml = '<div class="options-list">';
+            if (possibleTypes.length > 0) {
+                possibleTypes.forEach(type => {
+                    possibleHtml += `<span class="option-item">${type}</span> `;
+                });
+            } else {
+                possibleHtml += '<span class="no-data">—</span>';
+            }
+            possibleHtml += '</div>';
+
+            totalOriginal += original;
+            totalRounded += rounded;
+
+            // Для экспорта (только нужные столбцы: артикул, округлено, способ округления, кол-во тары)
+            lastResult.push({
+                'Артикул': article,
+                'Округлено': rounded,
+                'Способ округления': roundingMethod,
+                'Кол-во тары': taraCount
+            });
+
+            let rowClass = (changed && original > 0 && articleData) ? 'highlight-green' : '';
+
+            // Создаём select с опциями
+            let selectOptions = '';
+            for (let [key, type] of Object.entries(MULT_TYPES)) {
+                let selected = (key === selectedType) ? 'selected' : '';
+                let optionText = type.name;
+                
+                // Проверяем, есть ли точная кратность для этого типа
+                let hasExact = articleData ? getExactMultValue(articleData, key) !== null : false;
+                if (!hasExact && key !== 'china') {
+                    optionText += ' (нет)';
+                }
+                
+                selectOptions += `<option value="${key}" ${selected}>${optionText}</option>`;
+            }
+
+            html += `<tr class="${rowClass}">
+                <td><strong>${article}</strong></td>
+                <td>${original}</td>
+                <td>
+                    <select class="type-select" data-article="${article}">
+                        ${selectOptions}
+                    </select>
+                </td>
+                <td>${multValue}</td>
+                <td>${rounded}</td>
+                <td>${diffPercent > 0 ? diffPercent.toFixed(1) + '%' : '—'}</td>
+                <td>${possibleHtml}</td>
+                <td style="text-align:left; padding-left:15px;">${comment}</td>
+            </tr>`;
+        }
+
+        if (html === '') {
+            html = '<tr><td colspan="8" style="padding:30px;">Нет данных</td></tr>';
+        }
+
+        resultBody.innerHTML = html;
+        summaryInfo.innerText = `📦 исходно: ${totalOriginal}  →  после: ${totalRounded}  |  изменено: ${changedCount}`;
+    }
+
+    // Экспорт в XLSX
+    exportBtn.addEventListener('click', function() {
+        if (lastResult.length === 0) {
+            alert('Нет данных для экспорта');
+            return;
+        }
+        const ws = XLSX.utils.json_to_sheet(lastResult);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Результат");
+        XLSX.writeFile(wb, "okruglenie_s_analizom.xlsx");
+    });
+})();
+</script>
+</body>
+</html>
